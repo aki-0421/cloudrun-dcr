@@ -35,6 +35,7 @@ jobs:
       - name: Create Tag
         run: |-
           echo "CONTAINER_TAG=${{ env.REGISTRY_HOST }}/${{ env.PROJECT_ID }}/containers/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> ${GITHUB_ENV}
+          echo "SHORT_SHA=$(git rev-parse --short ${{ github.sha }})" >> ${GITHUB_ENV}
       - name: Build Container
         run: |-
           docker build --no-cache -t "${{ env.CONTAINER_TAG }}" -f docker/production.dockerfile .
@@ -43,4 +44,4 @@ jobs:
           docker push "${{ env.CONTAINER_TAG }}"
       - name: Deploy Container
         run: |-
-          gcloud run deploy ${{ env.SERVICE_NAME }} --image ${{ env.CONTAINER_TAG }} --region ${{ env.REGION }}
+          gcloud run deploy ${{ env.SERVICE_NAME }} --image ${{ env.CONTAINER_TAG }} --region ${{ env.REGION }} --no-traffic --tag ${{ env.SHORT_SHA }}
