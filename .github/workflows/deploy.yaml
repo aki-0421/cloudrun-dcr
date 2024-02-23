@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  PROJECT_ID: dcr-test-415201
+  REGION: asia-northeast1
+  REGISTRY_HOST: asia-northeast1-docker.pkg.dev
+  SERVICE_NAME: server
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Google Auth
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_WORKLOAD_IDENTITY_SERVICE_ACCOUNT }}
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+      - name: Setup Docker
+        run: |-
+          gcloud auth configure-docker ${{ env.REGISTRY_HOST }}
+      - name: Create Tag
+        run: |-
+          echo "CONTAINER_TAG=${{ env.REGISTRY_HOST }}/${{ env.PROJECT_ID }}/containers/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> ${GITHUB_ENV}
+      - name: Build Container
+        run: |-
+          docker build --no-cache -t "${{ env.CONTAINER_TAG }}" -f docker/production.dockerfile .
+      - name: Push Container
+        run: |-
+          docker push "${{ env.CONTAINER_TAG }}"
+      - name: Deploy Container
+        run: |-
+          gcloud run deploy ${{ env.SERVICE_NAME }} --image ${{ env.CONTAINER_TAG }} --region ${{ env.REGION }}
