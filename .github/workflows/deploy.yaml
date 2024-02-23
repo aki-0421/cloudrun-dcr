@@ -44,4 +44,4 @@ jobs:
           docker push "${{ env.CONTAINER_TAG }}"
       - name: Deploy Container
         run: |-
-          gcloud run deploy ${{ env.SERVICE_NAME }} --image ${{ env.CONTAINER_TAG }} --region ${{ env.REGION }} --no-traffic --tag ${{ env.SHORT_SHA }}
+          gcloud run deploy ${{ env.SERVICE_NAME }} --image ${{ env.CONTAINER_TAG }} --region ${{ env.REGION }} --no-traffic --tag sha-${{ env.SHORT_SHA }}
