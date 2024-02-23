@@ -1,0 +1,6 @@
+name = "dcr-test"
+main = "./index.js"
+compatibility_date = "2023-12-01"
+
+[vars]
+HOST = "server-xhkyl35ldq-an.a.run.app"
